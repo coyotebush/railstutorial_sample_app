@@ -43,6 +43,11 @@ describe UsersController do
         end
       end
 
+      it "should not have any delete links" do
+        get :index
+        response.should_not have_selector("a", :content => "delete")
+      end
+
       it "should paginate users" do
         get :index
         response.should have_selector("div.pagination")
@@ -52,7 +57,23 @@ describe UsersController do
         response.should have_selector("a", :href => "/users?page=2",
                                            :content => "Next")
       end
+
+
+      describe "who are administrators" do
+
+        before do
+          test_sign_in(Factory(:user, :admin => true, :email => Factory.next(:email)))
+        end
+
+        it "should have a delete link for each user" do
+          get :index
+          @users[0..2].each do |user|
+            response.should have_selector("a[title='Delete #{user.name}']")
+          end
+        end
+      end
     end
+
   end
 
   describe "GET 'new'" do
