@@ -86,6 +86,17 @@ describe UsersController do
       response.should have_selector("input[name='user[password_confirmation]'][type='password']")
     end
 
+    describe "for signed-in users" do
+
+      before do
+        test_sign_in(Factory(:user))
+      end
+
+      it "should protect the page" do
+        get :new
+        response.should redirect_to(root_path) 
+      end
+    end
   end
 
   describe "GET 'show'" do
@@ -178,6 +189,18 @@ describe UsersController do
       it "should sign the user in" do
         post :create, :user => @attr
         controller.should be_signed_in
+      end
+    end
+
+    describe "for signed-in users" do
+     
+      before do
+        test_sign_in(Factory(:user))
+      end
+
+      it "should protect the page" do
+        post :create, :user => {}
+        response.should redirect_to(root_path)
       end
     end
   end
