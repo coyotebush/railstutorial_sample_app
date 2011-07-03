@@ -17,6 +17,8 @@ describe UsersController do
 
       before do
         @user = test_sign_in(Factory(:user))
+        @admin = Factory(:user, :admin => true, :email => "admin@example.com",
+                         :name => "Administrator")
         second = Factory(:user, :name => "Bob", :email => "another@example.com")
         third  = Factory(:user, :name => "Ben", :email => "another@example.net")
 
@@ -62,7 +64,7 @@ describe UsersController do
       describe "who are administrators" do
 
         before do
-          test_sign_in(Factory(:user, :admin => true, :email => Factory.next(:email)))
+          test_sign_in(@admin)
         end
 
         it "should have a delete link for each user" do
@@ -70,6 +72,11 @@ describe UsersController do
           @users[0..2].each do |user|
             response.should have_selector("a[title='Delete #{user.name}']")
           end
+        end
+
+        it "should not have a delete link for the current user" do
+          get :index
+          response.should_not have_selector("a[title='Delete #{@admin.name}']")
         end
       end
     end
@@ -364,8 +371,8 @@ describe UsersController do
     describe "as an admin user" do
 
       before do
-        admin = Factory(:user, :email => "admin@example.com", :admin => true)
-        test_sign_in(admin)
+        @admin = Factory(:user, :email => "admin@example.com", :admin => true)
+        test_sign_in(@admin)
       end
 
       it "should destroy the user" do
@@ -377,6 +384,15 @@ describe UsersController do
       it "should redirect to the users page" do
         delete :destroy, :id => @user
         response.should redirect_to(users_path)
+      end
+
+      describe "deleting themself" do
+
+        it "should not delete the user" do
+          lambda do
+            delete :destroy, :id => @admin
+          end.should_not change(User, :count)
+        end
       end
     end
   end
